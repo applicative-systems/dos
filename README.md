@@ -1,4 +1,4 @@
-# grundschutz-nixos
+# Deutschland-OS
 
 NixOS modules that implement our interpretation of BSI **Grundschutz++** requirements.
 This is not an official BSI product and does not make a system "BSI-compliant".

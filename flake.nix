@@ -33,6 +33,7 @@
           settings.Ciphers = [ "3des-cbc" ];
         };
         "KONF.2.4".hardware.bluetooth.enable = true;
+        "KONF.3.8".services.udisks2.enable = true;
         "KONF.4.3".services.openssh = {
           enable = true;
           settings.PasswordAuthentication = true;
@@ -45,6 +46,8 @@
           isNormalUser = true;
           hashedPassword = "";
         };
+        "KONF.6.4".security.sudo.execWheelOnly = false;
+        "KONF.7.10".boot.specialFileSystems."/dev/shm".options = lib.mkForce [ "nosuid" ];
         "KONF.7.15".networking.firewall.enable = false;
         "KONF.7.16".boot.kernel.sysctl."kernel.kptr_restrict" = 0;
       };

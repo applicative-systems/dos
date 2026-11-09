@@ -95,9 +95,10 @@
     "rationale": "Restrict attached peripherals: services.usbguard and/or blacklist usb-storage. Needs an allowlist option per deployment."
   },
   "KONF.3.8": {
-    "status": "planned",
-    "approach": "enforce",
-    "rationale": "Disable automounting of removable media (services.udisks2 off, no desktop automount), nosuid/nodev/noexec for /media."
+    "status": "partial",
+    "modules": ["modules/konf/3-8-removable-media.nix"],
+    "tests": ["tests/konf-mounts-privileges.nix"],
+    "rationale": "Disables automounters: udisks2, devmon, gvfs, autofs. Manual mounts stay possible and are not forced to noexec. Desktops will need an opt-out."
   },
   "KONF.4.1": {
     "status": "manual",
@@ -149,9 +150,10 @@
     "rationale": "Mobile kiosk mode."
   },
   "KONF.6.4": {
-    "status": "planned",
-    "approach": "enforce",
-    "rationale": "Restrict privileged functions: security.sudo.execWheelOnly, su requires wheel, no setuid wrappers beyond need."
+    "status": "partial",
+    "modules": ["modules/konf/6-4-privileged-functions.nix"],
+    "tests": ["tests/konf-mounts-privileges.nix"],
+    "rationale": "sudo executable only for group wheel, sudo asks wheel members for a password (opt-out allowPasswordlessSudo), su requires wheel. privilegeEscalation = run0 replaces sudo with systemd run0 (polkit, no setuid sudo). Not covered: role-based administration (KANN), inventory of setuid wrappers."
   },
   "KONF.6.5": {
     "status": "planned",
@@ -245,9 +247,10 @@
     "rationale": "Restrict installation of software: users.mutableUsers false, nix.settings.allowed-users restricted to wheel/root."
   },
   "KONF.7.10": {
-    "status": "planned",
-    "approach": "enforce",
-    "rationale": "Guidance: no execution from data locations. noexec,nosuid,nodev on /tmp, /var/tmp, /dev/shm and data mounts."
+    "status": "partial",
+    "modules": ["modules/konf/7-10-execution-restriction.nix"],
+    "tests": ["tests/konf-mounts-privileges.nix"],
+    "rationale": "noexec,nosuid,nodev on /tmp (tmpfs), /var/tmp (bind mount) and /dev/shm. Opt-out via keepExec; Nix builds in /tmp need it. Not covered: application allowlisting (AppArmor/SELinux, code signing), data mounts such as /home or /srv (site specific)."
   },
   "KONF.7.11": {
     "status": "manual",
