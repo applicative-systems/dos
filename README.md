@@ -16,6 +16,7 @@ grundschutz.requirements."KONF.7.15".exempt = "Firewalling done upstream, see R-
 - `modules/<topic>/` – (flake output `nixosModules.<id>`) one module per requirement; enforce settings and/or assert on user config
 - `profiles/` – (flake output `nixosProfiles`) bundles per security level (`normal-SdT`, `erhöht`)
 - `tests/` – NixOS VM tests that check runtime state
+- `docs/STATUS.md` – generated status of all 652 catalog controls (`tools/update-status.sh`; `nix flake check` fails if it is stale)
 - `tools/coverage.sh` – catalog controls vs. mapping
 
 Code is MIT; `catalog/` is CC BY-SA 4.0 (REUSE.toml). Don't paste BSI requirement text into `.nix` files, reference IDs only.

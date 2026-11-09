@@ -77,6 +77,20 @@
         // {
           formatting = inputs.self.formatter.${system}.check inputs.self;
 
+          status-up-to-date = pkgs.runCommand "status-up-to-date" { } ''
+            diff ${./docs/STATUS.md} ${inputs.self.packages.${system}.status} \
+              || { echo "docs/STATUS.md is stale: run tools/update-status.sh"; exit 1; }
+            touch $out
+          '';
+
+          mapping-paths = pkgs.runCommand "mapping-paths" { nativeBuildInputs = [ pkgs.jq ]; } ''
+            cd ${inputs.self}
+            missing=$(jq -r '.[] | ((.modules // []) + (.tests // []))[]' mapping/mapping.json \
+              | while read -r p; do [ -e "$p" ] || echo "$p"; done)
+            [ -z "$missing" ] || { echo "mapping.json references missing files:"; echo "$missing"; exit 1; }
+            touch $out
+          '';
+
           reuse = pkgs.runCommand "reuse-lint" { nativeBuildInputs = [ pkgs.reuse ]; } ''
             cd ${inputs.self}
             reuse lint
@@ -138,6 +152,13 @@
             pkgs.runCommand "profile-konf-normal-sdt" { } "touch $out";
         }
       ) linuxPkgs;
+
+      packages = builtins.mapAttrs (_system: pkgs: {
+        # docs/STATUS.md: every catalog control joined with the mapping
+        status =
+          pkgs.runCommand "STATUS.md" { nativeBuildInputs = [ pkgs.jq ]; }
+            "jq -r --slurpfile m ${./mapping/mapping.json} -f ${./tools/status.jq} ${./catalog/Grundschutz++-resolved_catalog.json} > $out";
+      }) inputs.nixpkgs.legacyPackages;
 
       devShells = builtins.mapAttrs (system: pkgs: {
         default = pkgs.mkShell {
@@ -203,7 +224,10 @@
                   "*.yml"
                 ];
                 # Unmodified BSI data (CC BY-SA), must stay byte-identical.
-                excludes = [ "catalog/*" ];
+                excludes = [
+                  "catalog/*"
+                  "docs/STATUS.md" # generated
+                ];
               };
             };
           };
