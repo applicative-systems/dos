@@ -12,13 +12,21 @@
       linuxPkgs = lib.filterAttrs (
         system: _: builtins.match ".*-linux" system != null
       ) inputs.nixpkgs.legacyPackages;
+      # One user setting per requirement that contradicts it.
+      assertionCases = {
+        "KONF.2.4".hardware.bluetooth.enable = true;
+        "KONF.7.15".networking.firewall.enable = false;
+        "KONF.7.16".boot.kernel.sysctl."kernel.kptr_restrict" = 0;
+      };
     in
     {
       # One module per requirement, plus `default` importing all.
       nixosModules = {
         default = ./modules;
-        konf-7-15 = ./modules/konf/7-15-local-firewall.nix;
         konf-2-3 = ./modules/konf/2-3-default-credentials.nix;
+        konf-2-4 = ./modules/konf/2-4-disable-unneeded-functions.nix;
+        konf-7-15 = ./modules/konf/7-15-local-firewall.nix;
+        konf-7-16 = ./modules/konf/7-16-anti-exploit.nix;
       };
 
       # Non-standard output: bundles enable sets of requirements.
@@ -46,27 +54,33 @@
             touch $out
           '';
 
-          # Evaluation-only: the assertion must fire when the user contradicts it.
-          konf-7-15-assertion =
-            let
-              eval = lib.nixosSystem {
-                modules = [
-                  inputs.self.nixosModules.default
-                  {
-                    grundschutz.requirements."KONF.7.15".enable = true;
-                    networking.firewall.enable = false;
-                    system.stateVersion = "25.05";
-                    nixpkgs.hostPlatform = system;
-                  }
-                ];
-              };
-              failed = map (a: a.message) (
-                builtins.filter (a: !a.assertion && lib.hasPrefix "KONF." a.message) eval.config.assertions
-              );
-            in
-            assert builtins.length failed == 1;
-            pkgs.runCommand "konf-7-15-assertion" { } "touch $out";
         }
+        # Evaluation-only: exactly one assertion of the requirement must fire
+        # when the user contradicts it.
+        // lib.mapAttrs' (
+          id: contradiction:
+          let
+            eval = lib.nixosSystem {
+              modules = [
+                inputs.self.nixosModules.default
+                contradiction
+                {
+                  grundschutz.requirements.${id}.enable = true;
+                  system.stateVersion = "25.05";
+                  nixpkgs.hostPlatform = system;
+                }
+              ];
+            };
+            failed = map (a: a.message) (
+              builtins.filter (a: !a.assertion && lib.hasPrefix "${id}:" a.message) eval.config.assertions
+            );
+            name = "${lib.toLower (lib.replaceStrings [ "." ] [ "-" ] id)}-assertion";
+          in
+          lib.nameValuePair name (
+            assert builtins.length failed == 1;
+            pkgs.runCommand name { } "touch $out"
+          )
+        ) assertionCases
       ) linuxPkgs;
 
       devShells = builtins.mapAttrs (system: pkgs: {
@@ -88,16 +102,19 @@
             formatter = {
               nixfmt = {
                 command = lib.getExe pkgs.nixfmt;
+                priority = 3; # last: lay out what the linters rewrote
                 includes = [ "*.nix" ];
               };
               statix = {
                 command = lib.getExe pkgs.statix;
+                priority = 2;
                 options = [ "fix" ];
                 no-positional-arg-support = true;
                 includes = [ "*.nix" ];
               };
               deadnix = {
                 command = lib.getExe pkgs.deadnix;
+                priority = 1;
                 options = [ "--edit" ];
                 includes = [ "*.nix" ];
               };

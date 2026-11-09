@@ -1,12 +1,23 @@
 # Declares one Grundschutz++ requirement as a NixOS module.
 #
-#   mkRequirement { id = "KONF.7.15"; apply = { config, lib, pkgs, ... }: { ... }; }
+#   mkRequirement { id = "KONF.7.15"; apply = { config, lib, pkgs, cfg, ... }: { ... }; }
 #
-# Options created: grundschutz.requirements.<id>.{enable,exempt}
-# `apply` returns a normal NixOS config fragment (settings + assertions) that
-# is only active when the requirement is enabled and not exempted.
-{ id, apply }:
-args@{ config, lib, ... }:
+# Options created: grundschutz.requirements.<id>.{enable,exempt} plus any
+# requirement-specific `options` (a function of `lib`). `apply` returns a normal NixOS config
+# fragment (settings + assertions) that is only active when the requirement
+# is enabled and not exempted. It receives the usual module args plus `cfg`
+# (the requirement's own option values).
+{
+  id,
+  options ? _lib: { },
+  apply,
+}:
+args@{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.grundschutz.requirements.${id};
 in
@@ -22,10 +33,11 @@ in
         requirement is not enforced and a warning is emitted.
       '';
     };
-  };
+  }
+  // options lib;
 
   config = lib.mkMerge [
-    (lib.mkIf (cfg.enable && cfg.exempt == null) (apply args))
+    (lib.mkIf (cfg.enable && cfg.exempt == null) (apply (args // { inherit cfg pkgs; })))
     (lib.mkIf (cfg.enable && cfg.exempt != null) {
       warnings = [ "Grundschutz++ ${id} is exempted: ${cfg.exempt}" ];
     })

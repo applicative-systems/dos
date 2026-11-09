@@ -1,14 +1,488 @@
 {
-  "KONF.7.15": {
-    "status": "partial",
-    "modules": ["modules/konf/7-15-local-firewall.nix"],
-    "tests": ["tests/konf-7-15.nix"],
-    "rationale": "Host firewall is enabled and asserted. Outbound allowlisting is application-specific and not enforced."
+  "KONF.1.1": {
+    "status": "manual",
+    "rationale": "Process/policy for configuration management. The flake repo with review and CI is the technical foundation, but the policy itself is organizational."
+  },
+  "KONF.1.2": {
+    "status": "manual",
+    "rationale": "Periodic review of the policies; organizational."
+  },
+  "KONF.1.3": {
+    "status": "manual",
+    "rationale": "Documentation of config tools and their origin; flake.lock pins provenance, the documentation is organizational."
+  },
+  "KONF.1.4": {
+    "status": "manual",
+    "rationale": "Access restriction on configuration documentation (git repo permissions); outside the NixOS config."
+  },
+  "KONF.1.5": {
+    "status": "manual",
+    "rationale": "Secrets in config should be encrypted (sops-nix/agenix). Cannot be detected generically; KONF.2.3 already rejects plaintext user passwords."
+  },
+  "KONF.2.1": {
+    "status": "manual",
+    "rationale": "The NixOS configuration is the documented baseline; documenting it is up to the user."
+  },
+  "KONF.2.2": {
+    "status": "planned",
+    "approach": "enforce",
+    "rationale": "Crypto per BSI TR-02102: restrict sshd KexAlgorithms/Ciphers/MACs, reject TLS<1.2 in modules we provide. Needs an algorithm list from TR-02102-4."
   },
   "KONF.2.3": {
     "status": "partial",
     "modules": ["modules/konf/2-3-default-credentials.nix"],
     "tests": [],
     "rationale": "Plaintext passwords in the config are rejected. Well-known default hashes cannot be detected."
+  },
+  "KONF.2.4": {
+    "status": "partial",
+    "modules": ["modules/konf/2-4-disable-unneeded-functions.nix"],
+    "tests": ["tests/konf-2-4.nix"],
+    "rationale": "Disables Bluetooth, FireWire, rarely used network protocols/filesystems (kernel modules), avahi, printing and the default package set. List is a starting point, not exhaustive. Deviations via keepKernelModules and keepServices. Not covered: weak crypto algorithms (KONF.2.2), unneeded users, firmware features."
+  },
+  "KONF.2.5": {
+    "status": "planned",
+    "approach": "assert",
+    "rationale": "Configuration drift. NixOS is declarative; plan: assert system.configurationRevision is set so a running system is traceable to a commit."
+  },
+  "KONF.2.6": {
+    "status": "not-applicable",
+    "rationale": "Mobile devices; server scope."
+  },
+  "KONF.2.7": {
+    "status": "manual",
+    "rationale": "Level erhöht, optional (KANN). Sovereign tooling is a procurement decision."
+  },
+  "KONF.2.8": {
+    "status": "manual",
+    "rationale": "Level erhöht, optional. Alternative admin access (e.g. serial/out-of-band) is deployment specific."
+  },
+  "KONF.2.9": {
+    "status": "planned",
+    "approach": "assert",
+    "rationale": "Level erhöht. Assert Secure Boot is active (e.g. lanzaboote) when the option is available; exempt for VMs."
+  },
+  "KONF.3.1": {
+    "status": "planned",
+    "approach": "assert",
+    "rationale": "Assert TPM use (security.tpm2.enable) with exempt for hardware without TPM."
+  },
+  "KONF.3.2": {
+    "status": "planned",
+    "approach": "assert",
+    "rationale": "Assert encrypted root (initrd LUKS, or ZFS native encryption). Exempt option for cloud/VM setups where the provider encrypts."
+  },
+  "KONF.3.3": {
+    "status": "not-applicable",
+    "rationale": "SIM/mobile connectivity; server scope."
+  },
+  "KONF.3.4": {
+    "status": "not-applicable",
+    "rationale": "Mobile devices."
+  },
+  "KONF.3.5": {
+    "status": "not-applicable",
+    "rationale": "Location determination, optional (KANN); not meaningful for servers."
+  },
+  "KONF.3.6": {
+    "status": "not-applicable",
+    "rationale": "Mobile devices."
+  },
+  "KONF.3.7": {
+    "status": "planned",
+    "approach": "enforce",
+    "rationale": "Restrict attached peripherals: services.usbguard and/or blacklist usb-storage. Needs an allowlist option per deployment."
+  },
+  "KONF.3.8": {
+    "status": "planned",
+    "approach": "enforce",
+    "rationale": "Disable automounting of removable media (services.udisks2 off, no desktop automount), nosuid/nodev/noexec for /media."
+  },
+  "KONF.4.1": {
+    "status": "manual",
+    "rationale": "Directory service attachment depends on the organization (SSSD/LDAP); not generically enforceable."
+  },
+  "KONF.4.2": {
+    "status": "planned",
+    "approach": "assert",
+    "rationale": "Resolvers must be authorized. Plan: option listing allowed resolvers, assert networking.nameservers/resolved DNS is a subset."
+  },
+  "KONF.4.3": {
+    "status": "planned",
+    "approach": "enforce",
+    "rationale": "Remote maintenance authentication: sshd key-only (PasswordAuthentication/KbdInteractiveAuthentication off)."
+  },
+  "KONF.4.4": {
+    "status": "planned",
+    "approach": "enforce",
+    "rationale": "Restrict remote maintenance: PermitRootLogin no, AllowGroups, restricted forwarding. Needs a user-provided group option."
+  },
+  "KONF.4.5": {
+    "status": "planned",
+    "approach": "assert",
+    "rationale": "Time sources must be authorized. Plan: option for NTP servers, enforce on timesyncd/chrony, assert no unlisted sources."
+  },
+  "KONF.5.1": {
+    "status": "planned",
+    "approach": "enforce",
+    "rationale": "Authenticate access: users.allowNoPasswordLogin false, no empty passwords, root locked, sudo requires password or key per policy."
+  },
+  "KONF.5.2": {
+    "status": "manual",
+    "rationale": "Guidance is about users being logged in with several identities at once; no config-level rule on a server. Revisit if desktop scope is added."
+  },
+  "KONF.6.1": {
+    "status": "planned",
+    "approach": "enforce",
+    "rationale": "Minimal privileges for applications: systemd sandboxing defaults for services we manage, plus AppArmor. Large; split per service later."
+  },
+  "KONF.6.2": {
+    "status": "deferred",
+    "rationale": "File server role only; handle in a role-specific module (Samba/NFS)."
+  },
+  "KONF.6.3": {
+    "status": "not-applicable",
+    "rationale": "Mobile kiosk mode."
+  },
+  "KONF.6.4": {
+    "status": "planned",
+    "approach": "enforce",
+    "rationale": "Restrict privileged functions: security.sudo.execWheelOnly, su requires wheel, no setuid wrappers beyond need."
+  },
+  "KONF.6.5": {
+    "status": "planned",
+    "approach": "assert",
+    "rationale": "Level erhöht. Mandatory access control: assert security.apparmor.enable."
+  },
+  "KONF.6.6": {
+    "status": "deferred",
+    "rationale": "Application level."
+  },
+  "KONF.6.7": {
+    "status": "deferred",
+    "rationale": "Application level."
+  },
+  "KONF.6.8": {
+    "status": "deferred",
+    "rationale": "Web server role."
+  },
+  "KONF.6.9": {
+    "status": "deferred",
+    "rationale": "Web server role."
+  },
+  "KONF.6.10": {
+    "status": "deferred",
+    "rationale": "Web server role."
+  },
+  "KONF.6.11": {
+    "status": "deferred",
+    "rationale": "Web server role."
+  },
+  "KONF.6.12": {
+    "status": "not-applicable",
+    "rationale": "Video conferencing application."
+  },
+  "KONF.6.13": {
+    "status": "deferred",
+    "rationale": "Application level, optional."
+  },
+  "KONF.6.14": {
+    "status": "not-applicable",
+    "rationale": "Web browsers; server scope."
+  },
+  "KONF.6.15": {
+    "status": "not-applicable",
+    "rationale": "Web browsers; server scope."
+  },
+  "KONF.6.16": {
+    "status": "deferred",
+    "rationale": "Virtualization hosts only; handle with a virtualization role."
+  },
+  "KONF.7.1": {
+    "status": "planned",
+    "approach": "enforce",
+    "rationale": "Malware scanning on file access: ClamAV (services.clamav, on-access). Needs an agreed scope of paths."
+  },
+  "KONF.7.2": {
+    "status": "planned",
+    "approach": "enforce",
+    "rationale": "Regular scans: services.clamav.scanner with interval."
+  },
+  "KONF.7.3": {
+    "status": "planned",
+    "approach": "enforce",
+    "rationale": "Level erhöht. Host-based detection (auditd rules, AIDE); verify which options nixpkgs provides."
+  },
+  "KONF.7.4": {
+    "status": "manual",
+    "rationale": "Level erhöht. Network IDS is usually a separate system."
+  },
+  "KONF.7.5": {
+    "status": "planned",
+    "approach": "assert",
+    "rationale": "Alerting on malware findings. Assert a notification path (mail/webhook) is configured once 7.1/7.2 exist."
+  },
+  "KONF.7.6": {
+    "status": "planned",
+    "approach": "enforce",
+    "rationale": "Automatic signature updates: services.clamav.updater."
+  },
+  "KONF.7.7": {
+    "status": "manual",
+    "rationale": "Level erhöht. Periodic test of the scanner (EICAR); operational procedure."
+  },
+  "KONF.7.8": {
+    "status": "manual",
+    "rationale": "Level erhöht. Multiple scan engines; product decision."
+  },
+  "KONF.7.9": {
+    "status": "planned",
+    "approach": "enforce",
+    "rationale": "Restrict installation of software: users.mutableUsers false, nix.settings.allowed-users restricted to wheel/root."
+  },
+  "KONF.7.10": {
+    "status": "planned",
+    "approach": "enforce",
+    "rationale": "Guidance: no execution from data locations. noexec,nosuid,nodev on /tmp, /var/tmp, /dev/shm and data mounts."
+  },
+  "KONF.7.11": {
+    "status": "manual",
+    "rationale": "Level erhöht. Library execution control; no standard NixOS mechanism."
+  },
+  "KONF.7.12": {
+    "status": "manual",
+    "rationale": "Level erhöht. Script execution control; no standard NixOS mechanism."
+  },
+  "KONF.7.13": {
+    "status": "deferred",
+    "rationale": "Level erhöht. Per-service systemd SystemCallFilter; part of per-service hardening (see 6.1)."
+  },
+  "KONF.7.14": {
+    "status": "planned",
+    "approach": "enforce",
+    "rationale": "Module signature enforcement. NixOS kernels do not sign modules by default; investigate security.lockKernelModules and a signed-kernel option first."
+  },
+  "KONF.7.15": {
+    "status": "partial",
+    "modules": ["modules/konf/7-15-local-firewall.nix"],
+    "tests": ["tests/konf-7-15.nix"],
+    "rationale": "Host firewall is enabled and asserted. Outbound allowlisting is application-specific and not enforced."
+  },
+  "KONF.7.16": {
+    "status": "implemented",
+    "modules": ["modules/konf/7-16-anti-exploit.nix"],
+    "tests": ["tests/konf-7-16.nix"],
+    "rationale": "Interpretation: kernel exploit mitigations. Sysctl limits (kptr_restrict, dmesg_restrict, unprivileged BPF, BPF JIT hardening, ASLR, ptrace_scope, perf_event_paranoid), hardened boot parameters (slab_nomerge, init_on_alloc/free, page_alloc.shuffle, randomize_kstack_offset, vsyscall=none), page table isolation, kexec disabled. Contradicting user settings are reported via assertions."
+  },
+  "KONF.8.1": {
+    "status": "planned",
+    "approach": "assert",
+    "rationale": "Monitor for pending security updates. Plan: assert update checking is configured (autoUpgrade or vulnix); exempt for externally managed deployments."
+  },
+  "KONF.8.2": {
+    "status": "planned",
+    "approach": "assert",
+    "rationale": "Automatic security updates for applications: assert system.autoUpgrade (flake-based) or exempt with reason."
+  },
+  "KONF.9.1": {
+    "status": "planned",
+    "approach": "assert",
+    "rationale": "Guidance: limit storage for non-system services via quotas/separate filesystems. Plan: assert separate /var and /home mounts or quotas."
+  },
+  "KONF.9.2": {
+    "status": "manual",
+    "rationale": "Level erhöht. Host CPU limits for guests; part of virtualization role."
+  },
+  "KONF.9.3": {
+    "status": "manual",
+    "rationale": "Level erhöht. Redundant components for critical functions; architecture decision."
+  },
+  "KONF.10.1": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.10.2": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.10.3": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.10.4": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.10.5": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.11.1": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.11.2": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.11.3": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.11.4": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.11.5": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.11.6": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.11.7": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.11.8": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.12.1": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.12.2": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.12.3": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.12.4": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.12.5": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.12.6": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.12.7": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.12.8": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.12.9": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.12.10": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.12.11": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.12.12": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.12.13": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.12.14": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.13.1": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.13.2": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.13.3": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.13.4": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.13.5": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.13.6": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.13.7": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.13.8": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.13.9": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.13.10": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.13.11": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.14.1": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.14.2": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.14.3": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.14.4": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.14.5": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.15.1": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.15.2": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.15.3": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
+  },
+  "KONF.15.4": {
+    "status": "deferred",
+    "rationale": "Application- or service-specific (KONF.10 to KONF.15); to be handled in per-service/role modules."
   }
 }
