@@ -1,0 +1,14 @@
+{
+  "KONF.7.15": {
+    "status": "partial",
+    "modules": ["modules/konf/7-15-local-firewall.nix"],
+    "tests": ["tests/konf-7-15.nix"],
+    "rationale": "Host firewall is enabled and asserted. Outbound allowlisting is application-specific and not enforced."
+  },
+  "KONF.2.3": {
+    "status": "partial",
+    "modules": ["modules/konf/2-3-default-credentials.nix"],
+    "tests": [],
+    "rationale": "Plaintext passwords in the config are rejected. Well-known default hashes cannot be detected."
+  }
+}
