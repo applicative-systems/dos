@@ -9,7 +9,6 @@
     inputs:
     let
       inherit (inputs.nixpkgs) lib;
-      # VM tests need Linux; keep darwin etc. out of `checks`.
       linuxPkgs = lib.filterAttrs (
         system: _: builtins.match ".*-linux" system != null
       ) inputs.nixpkgs.legacyPackages;
@@ -39,6 +38,13 @@
           };
         }) (builtins.readDir ./tests))
         // {
+          formatting = inputs.self.formatter.${system}.check inputs.self;
+
+          reuse = pkgs.runCommand "reuse-lint" { nativeBuildInputs = [ pkgs.reuse ]; } ''
+            cd ${inputs.self}
+            reuse lint
+            touch $out
+          '';
 
           # Evaluation-only: the assertion must fire when the user contradicts it.
           konf-7-15-assertion =
@@ -68,8 +74,67 @@
           packages = [
             pkgs.jq
             pkgs.reuse
+            inputs.self.formatter.${system}
           ];
         };
       }) inputs.nixpkgs.legacyPackages;
+
+      formatter = builtins.mapAttrs (
+        _system: pkgs:
+        pkgs.treefmt.withConfig {
+          settings = {
+            tree-root-file = "flake.nix";
+            on-unmatched = "info";
+            formatter = {
+              nixfmt = {
+                command = lib.getExe pkgs.nixfmt;
+                includes = [ "*.nix" ];
+              };
+              statix = {
+                command = lib.getExe pkgs.statix;
+                options = [ "fix" ];
+                no-positional-arg-support = true;
+                includes = [ "*.nix" ];
+              };
+              deadnix = {
+                command = lib.getExe pkgs.deadnix;
+                options = [ "--edit" ];
+                includes = [ "*.nix" ];
+              };
+              shellcheck = {
+                command = lib.getExe pkgs.shellcheck;
+                includes = [ "*.sh" ];
+              };
+              shfmt = {
+                command = lib.getExe pkgs.shfmt;
+                options = [
+                  "-w"
+                  "-i"
+                  "2"
+                  "-s"
+                ];
+                includes = [ "*.sh" ];
+              };
+              taplo = {
+                command = lib.getExe pkgs.taplo;
+                options = [ "format" ];
+                includes = [ "*.toml" ];
+              };
+              prettier = {
+                command = lib.getExe pkgs.prettier;
+                options = [ "--write" ];
+                includes = [
+                  "*.json"
+                  "*.md"
+                  "*.yaml"
+                  "*.yml"
+                ];
+                # Unmodified BSI data (CC BY-SA), must stay byte-identical.
+                excludes = [ "catalog/*" ];
+              };
+            };
+          };
+        }
+      ) inputs.nixpkgs.legacyPackages;
     };
 }

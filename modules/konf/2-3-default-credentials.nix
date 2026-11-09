@@ -5,15 +5,19 @@
 # well-known hashes.
 import ../../lib/mkRequirement.nix {
   id = "KONF.2.3";
-  apply = { config, lib, ... }:
+  apply =
+    { config, lib, ... }:
     let
-      offenders = lib.attrNames (lib.filterAttrs
-        (_: u: u.password != null || u.initialPassword != null)
-        config.users.users);
-    in {
-      assertions = [{
-        assertion = offenders == [ ];
-        message = "KONF.2.3: plaintext password/initialPassword set for users: ${lib.concatStringsSep ", " offenders}. Use hashedPasswordFile or similar.";
-      }];
+      offenders = lib.attrNames (
+        lib.filterAttrs (_: u: u.password != null || u.initialPassword != null) config.users.users
+      );
+    in
+    {
+      assertions = [
+        {
+          assertion = offenders == [ ];
+          message = "KONF.2.3: plaintext password/initialPassword set for users: ${lib.concatStringsSep ", " offenders}. Use hashedPasswordFile or similar.";
+        }
+      ];
     };
 }

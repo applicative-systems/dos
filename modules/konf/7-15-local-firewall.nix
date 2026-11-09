@@ -5,9 +5,11 @@ import ../../lib/mkRequirement.nix {
   id = "KONF.7.15";
   apply = { config, lib, ... }: {
     networking.firewall.enable = lib.mkDefault true;
-    assertions = [{
-      assertion = config.networking.firewall.enable;
-      message = "KONF.7.15: networking.firewall.enable must be true (or set grundschutz.requirements.\"KONF.7.15\".exempt).";
-    }];
+    assertions = [
+      {
+        assertion = config.networking.firewall.enable;
+        message = "KONF.7.15: networking.firewall.enable must be true (or set grundschutz.requirements.\"KONF.7.15\".exempt).";
+      }
+    ];
   };
 }
