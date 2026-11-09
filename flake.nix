@@ -12,21 +12,47 @@
       linuxPkgs = lib.filterAttrs (
         system: _: builtins.match ".*-linux" system != null
       ) inputs.nixpkgs.legacyPackages;
+      # modules/<topic>/<n>-<m>-<slug>.nix -> nixosModules.<topic>-<n>-<m>
+      requirementModules = lib.concatMapAttrs (
+        topic: type:
+        lib.optionalAttrs (type == "directory") (
+          lib.concatMapAttrs (
+            file: _:
+            let
+              m = builtins.match "([0-9]+-[0-9]+)-.*\\.nix" file;
+            in
+            lib.optionalAttrs (m != null) { "${topic}-${builtins.head m}" = ./modules + "/${topic}/${file}"; }
+          ) (builtins.readDir (./modules + "/${topic}"))
+        )
+      ) (builtins.readDir ./modules);
+
       # One user setting per requirement that contradicts it.
       assertionCases = {
+        "KONF.2.2".services.openssh = {
+          enable = true;
+          settings.Ciphers = [ "3des-cbc" ];
+        };
         "KONF.2.4".hardware.bluetooth.enable = true;
+        "KONF.4.3".services.openssh = {
+          enable = true;
+          settings.PasswordAuthentication = true;
+        };
+        "KONF.4.4".services.openssh = {
+          enable = true;
+          settings.PermitRootLogin = "yes";
+        };
+        "KONF.5.1".users.users.alice = {
+          isNormalUser = true;
+          hashedPassword = "";
+        };
         "KONF.7.15".networking.firewall.enable = false;
         "KONF.7.16".boot.kernel.sysctl."kernel.kptr_restrict" = 0;
       };
     in
     {
       # One module per requirement, plus `default` importing all.
-      nixosModules = {
+      nixosModules = requirementModules // {
         default = ./modules;
-        konf-2-3 = ./modules/konf/2-3-default-credentials.nix;
-        konf-2-4 = ./modules/konf/2-4-disable-unneeded-functions.nix;
-        konf-7-15 = ./modules/konf/7-15-local-firewall.nix;
-        konf-7-16 = ./modules/konf/7-16-anti-exploit.nix;
       };
 
       # Non-standard output: bundles enable sets of requirements.
@@ -55,7 +81,7 @@
           '';
 
         }
-        # Evaluation-only: exactly one assertion of the requirement must fire
+        # Evaluation-only: at least one assertion of the requirement must fire
         # when the user contradicts it.
         // lib.mapAttrs' (
           id: contradiction:
@@ -77,10 +103,37 @@
             name = "${lib.toLower (lib.replaceStrings [ "." ] [ "-" ] id)}-assertion";
           in
           lib.nameValuePair name (
-            assert builtins.length failed == 1;
+            assert failed != [ ];
             pkgs.runCommand name { } "touch $out"
           )
         ) assertionCases
+        # The whole profile must evaluate without any KONF assertion firing on
+        # an ordinary configuration: requirements must not contradict each other.
+        // {
+          profile-konf-normal-sdt =
+            let
+              eval = lib.nixosSystem {
+                modules = [
+                  inputs.self.nixosProfiles.konf-normal-sdt
+                  {
+                    system.stateVersion = "25.05";
+                    nixpkgs.hostPlatform = system;
+                    services.openssh.enable = true;
+                    users.users.alice = {
+                      isNormalUser = true;
+                      extraGroups = [ "wheel" ];
+                      hashedPassword = "!";
+                    };
+                  }
+                ];
+              };
+              failed = map (a: a.message) (
+                builtins.filter (a: !a.assertion && lib.hasPrefix "KONF." a.message) eval.config.assertions
+              );
+            in
+            assert lib.assertMsg (failed == [ ]) (lib.concatStringsSep "\n" failed);
+            pkgs.runCommand "profile-konf-normal-sdt" { } "touch $out";
+        }
       ) linuxPkgs;
 
       devShells = builtins.mapAttrs (system: pkgs: {

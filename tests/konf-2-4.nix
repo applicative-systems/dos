@@ -1,16 +1,17 @@
-# NixOS test module (as consumed by pkgs.testers.runNixOSTest).
-_: {
+{
   name = "konf-2-4";
 
-  nodes.machine = _: {
-    grundschutz.requirements."KONF.2.4".enable = true;
-  };
+  nodes = {
+    machine = {
+      grundschutz.requirements."KONF.2.4".enable = true;
+    };
 
-  nodes.keeps = _: {
-    grundschutz.requirements."KONF.2.4" = {
-      enable = true;
-      keepKernelModules = [ "sctp" ];
-      keepServices = [ "avahi" ];
+    keeps = {
+      grundschutz.requirements."KONF.2.4" = {
+        enable = true;
+        keepKernelModules = [ "sctp" ];
+        keepServices = [ "avahi" ];
+      };
     };
   };
 

@@ -1,8 +1,7 @@
-# NixOS test module (as consumed by pkgs.testers.runNixOSTest).
-_: {
+{
   name = "konf-7-16";
 
-  nodes.machine = _: {
+  nodes.machine = {
     grundschutz.requirements."KONF.7.16".enable = true;
   };
 

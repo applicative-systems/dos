@@ -24,9 +24,10 @@
     "rationale": "The NixOS configuration is the documented baseline; documenting it is up to the user."
   },
   "KONF.2.2": {
-    "status": "planned",
-    "approach": "enforce",
-    "rationale": "Crypto per BSI TR-02102: restrict sshd KexAlgorithms/Ciphers/MACs, reject TLS<1.2 in modules we provide. Needs an algorithm list from TR-02102-4."
+    "status": "partial",
+    "modules": ["modules/konf/2-2-cryptographic-algorithms.nix"],
+    "tests": ["tests/konf-ssh.nix"],
+    "rationale": "SSH only. The guidance defers to established algorithms; we use BSI TR-02102-4 (2026-01) tables 2-5 as that standard. sshd and the ssh client are limited to the listed key exchange, cipher, MAC and signature algorithms (OpenSSH names), host keys are ECDSA only, rekey after 1 GB/1 h. Consequences: Ed25519, Curve25519 and RSA are not in the TR and are rejected. diffie-hellman-group15-sha512 has no OpenSSH equivalent. Encrypt-then-MAC HMAC variants and sk-ecdsa-sha2-nistp256 are accepted as the same primitives (our interpretation). Not covered: TLS and other protocols, disk encryption algorithms, DH group size in /etc/ssh/moduli."
   },
   "KONF.2.3": {
     "status": "partial",
@@ -108,14 +109,16 @@
     "rationale": "Resolvers must be authorized. Plan: option listing allowed resolvers, assert networking.nameservers/resolved DNS is a subset."
   },
   "KONF.4.3": {
-    "status": "planned",
-    "approach": "enforce",
-    "rationale": "Remote maintenance authentication: sshd key-only (PasswordAuthentication/KbdInteractiveAuthentication off)."
+    "status": "partial",
+    "modules": ["modules/konf/4-3-remote-maintenance-authentication.nix"],
+    "tests": ["tests/konf-ssh.nix"],
+    "rationale": "SSH only. Public key authentication only; password, keyboard-interactive, empty-password and host-based authentication are off. Other remote maintenance protocols (RDP, SNMP, vendor tools) are not covered."
   },
   "KONF.4.4": {
-    "status": "planned",
-    "approach": "enforce",
-    "rationale": "Restrict remote maintenance: PermitRootLogin no, AllowGroups, restricted forwarding. Needs a user-provided group option."
+    "status": "partial",
+    "modules": ["modules/konf/4-4-remote-maintenance-restriction.nix"],
+    "tests": ["tests/konf-ssh.nix"],
+    "rationale": "SSH only. No root login, login restricted to allowGroups (default wheel), TCP/agent/X11 forwarding, gateway ports and tunnels off unless allowForwarding is set. Deploy tools need a normal admin user with sudo instead of root."
   },
   "KONF.4.5": {
     "status": "planned",
@@ -123,9 +126,10 @@
     "rationale": "Time sources must be authorized. Plan: option for NTP servers, enforce on timesyncd/chrony, assert no unlisted sources."
   },
   "KONF.5.1": {
-    "status": "planned",
-    "approach": "enforce",
-    "rationale": "Authenticate access: users.allowNoPasswordLogin false, no empty passwords, root locked, sudo requires password or key per policy."
+    "status": "partial",
+    "modules": ["modules/konf/5-1-system-authentication.nix"],
+    "tests": [],
+    "rationale": "Every login must authenticate: users.allowNoPasswordLogin false, no console autologin, no user with an empty hashed password, no PAM service accepting empty passwords. The login PAM service is forced to false because NixOS enables it by default. Covered by the eval assertion test and the profile check only: NixOS VM tests cannot enable it, since the test driver uses an empty root password. Screen lock and MFA are not covered (BER.5.9)."
   },
   "KONF.5.2": {
     "status": "manual",
