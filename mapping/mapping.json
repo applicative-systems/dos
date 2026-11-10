@@ -119,7 +119,7 @@
     "status": "partial",
     "modules": ["modules/konf/4-4-remote-maintenance-restriction.nix"],
     "tests": ["tests/konf-ssh.nix"],
-    "rationale": "SSH only. No root login, login restricted to allowGroups (default wheel), TCP/agent/X11 forwarding, gateway ports and tunnels off unless allowForwarding is set. Deploy tools need a normal admin user with sudo instead of root."
+    "rationale": "SSH only. No root login, login restricted to allowGroups (default wheel), TCP/agent/X11 forwarding, gateway ports and tunnels off unless allowForwarding is set. Deploy tools need a normal admin user with sudo instead of root. Lockout guard: evaluation fails if no user in allowGroups has an authorized key (ECDSA when KONF.2.2 is on)."
   },
   "KONF.4.5": {
     "status": "planned",

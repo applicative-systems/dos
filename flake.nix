@@ -42,6 +42,18 @@
           enable = true;
           settings.PermitRootLogin = "yes";
         };
+        # root login off, wheel has no members: nobody could log in
+        "KONF.4.4/lockout".services.openssh.enable = true;
+        # only an Ed25519 key while KONF.2.2 limits keys to ECDSA
+        "KONF.4.4/ed25519-only" = {
+          services.openssh.enable = true;
+          grundschutz.requirements."KONF.2.2".enable = true;
+          users.users.alice = {
+            isNormalUser = true;
+            extraGroups = [ "wheel" ];
+            openssh.authorizedKeys.keys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPlaceholder alice@example" ];
+          };
+        };
         "KONF.5.1".users.users.alice = {
           isNormalUser = true;
           hashedPassword = "";
@@ -103,21 +115,22 @@
         // lib.mapAttrs' (
           id: contradiction:
           let
+            reqId = builtins.head (lib.splitString "/" id);
             eval = lib.nixosSystem {
               modules = [
                 inputs.self.nixosModules.default
                 contradiction
                 {
-                  grundschutz.requirements.${id}.enable = true;
+                  grundschutz.requirements.${reqId}.enable = true;
                   system.stateVersion = "25.05";
                   nixpkgs.hostPlatform = system;
                 }
               ];
             };
             failed = map (a: a.message) (
-              builtins.filter (a: !a.assertion && lib.hasPrefix "${id}:" a.message) eval.config.assertions
+              builtins.filter (a: !a.assertion && lib.hasPrefix "${reqId}:" a.message) eval.config.assertions
             );
-            name = "${lib.toLower (lib.replaceStrings [ "." ] [ "-" ] id)}-assertion";
+            name = "${lib.toLower (lib.replaceStrings [ "." "/" ] [ "-" "-" ] id)}-assertion";
           in
           lib.nameValuePair name (
             assert failed != [ ];
@@ -140,6 +153,10 @@
                       isNormalUser = true;
                       extraGroups = [ "wheel" ];
                       hashedPassword = "!";
+                      # ECDSA, as KONF.2.2 requires (dummy key, only its type matters)
+                      openssh.authorizedKeys.keys = [
+                        "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBPlaceholder alice@example"
+                      ];
                     };
                   }
                 ];
