@@ -1,7 +1,8 @@
 # KONF.2.2 Kryptographische Verfahren in IT-Systemen (normal-SdT, SOLLTE)
 # The guidance defers to "current cryptographic methods" (BER.5.4/BER.7.x:
 # "etablierte Algorithmen nach <anerkannten Standards>"). We take BSI
-# TR-02102-4 (SSH, version 2026-01) as that standard.
+# TR-02102-4 (SSH, version 2026-01) as that standard:
+# https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-4.html
 #
 # Interpretation, SSH only (status "partial": TLS etc. are not covered yet):
 #  - KEX, ciphers, MACs, signature algorithms limited to Tables 2-5 of the TR,
