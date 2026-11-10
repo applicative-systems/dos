@@ -1,5 +1,6 @@
 # NixOS test module (as consumed by pkgs.testers.runNixOSTest).
-# Covers KONF.2.2, KONF.4.3 and KONF.4.4 on a real sshd. KONF.5.1 cannot be
+# Covers KONF.2.2, KONF.4.3 and KONF.4.4 on a real sshd, in containers (only
+# userspace is involved, so no VM is needed). KONF.5.1 cannot be
 # enabled on a test VM: the test driver gives root an empty password and
 # console autologin (covered by the 5-1 assertion test in flake.nix instead).
 # The expected algorithm sets are taken from BSI TR-02102-4 (2026-01), tables 2-5.
@@ -18,27 +19,40 @@ in
 {
   name = "konf-ssh";
 
-  nodes = {
-    server = {
-      services.openssh.enable = true;
-      grundschutz.requirements = {
-        "KONF.2.2".enable = true;
-        "KONF.4.3".enable = true;
-        "KONF.4.4".enable = true;
-      };
-      users.users = {
-        alice = {
-          isNormalUser = true;
-          extraGroups = [ "wheel" ];
-          openssh.authorizedKeys.keyFiles = authorized;
+  # The Nix build sandbox shows store files with a foreign owner, so ssh rejects
+  # the systemd-ssh-proxy drop-in that the client config includes.
+  defaults.programs.ssh.systemd-ssh-proxy.enable = false;
+
+  containers = {
+    server =
+      { lib, ... }:
+      {
+        services.openssh.enable = true;
+        grundschutz.requirements = {
+          "KONF.2.2".enable = true;
+          "KONF.4.3".enable = true;
+          "KONF.4.4".enable = true;
         };
-        bob = {
-          isNormalUser = true;
-          openssh.authorizedKeys.keyFiles = authorized;
+        # Without PAM (forced for containers) sshd refuses accounts locked with "!";
+        # "*" means "no password login" but not locked.
+        users.users = {
+          alice = {
+            isNormalUser = true;
+            extraGroups = [ "wheel" ];
+            hashedPassword = "*";
+            openssh.authorizedKeys.keyFiles = authorized;
+          };
+          bob = {
+            isNormalUser = true;
+            hashedPassword = "*";
+            openssh.authorizedKeys.keyFiles = authorized;
+          };
+          root = {
+            hashedPassword = lib.mkForce "*";
+            openssh.authorizedKeys.keyFiles = authorized;
+          };
         };
-        root.openssh.authorizedKeys.keyFiles = authorized;
       };
-    };
 
     # unrestricted client: offers every key type, so the server is what refuses
     client = { };
@@ -51,7 +65,10 @@ in
 
   testScript = ''
     start_all()
-    server.wait_for_unit("sshd.service")
+    for node in [server, client, strict]:
+        node.wait_for_unit("multi-user.target")
+    # containers default to socket-activated sshd (container-config.nix)
+    server.wait_for_unit("sshd.socket")
     server.wait_for_open_port(22)
 
     client.succeed("install -m600 ${keys}/ecdsa /root/id_ecdsa")
@@ -60,8 +77,16 @@ in
     def ssh(user, key):
         return (
             f"ssh -i /root/id_{key} -o IdentitiesOnly=yes -o BatchMode=yes "
-            f"-o StrictHostKeyChecking=no {user}@server true"
+            f"-o StrictHostKeyChecking=no {user}@server true 2>&1"
         )
+
+    def login_works(user, key):
+        status, out = client.execute(ssh(user, key))
+        t.assertEqual(status, 0, out)
+
+    def login_refused(user, key):
+        status, out = client.execute(ssh(user, key))
+        t.assertNotEqual(status, 0, out)
 
     def effective(machine, command):
         out = {}
@@ -79,10 +104,10 @@ in
     HOSTKEY = {"ecdsa-sha2-nistp256", "ecdsa-sha2-nistp384", "ecdsa-sha2-nistp521"}
 
     with subtest("KONF.4.3/4.4: an allowed user with an ECDSA key can log in"):
-        client.succeed(ssh("alice", "ecdsa"))
+        login_works("alice", "ecdsa")
 
     with subtest("KONF.2.2: Ed25519 keys are refused although authorized"):
-        client.fail(ssh("alice", "ed25519"))
+        login_refused("alice", "ed25519")
 
     with subtest("KONF.4.3: password authentication is refused"):
         status, out = client.execute(
@@ -93,8 +118,8 @@ in
         t.assertIn("Permission denied (publickey)", out)
 
     with subtest("KONF.4.4: root and users outside AllowGroups are refused"):
-        client.fail(ssh("root", "ecdsa"))
-        client.fail(ssh("bob", "ecdsa"))
+        login_refused("root", "ecdsa")
+        login_refused("bob", "ecdsa")
 
     with subtest("KONF.2.2: server offers only an ECDSA host key"):
         scan = client.succeed("ssh-keyscan server 2>/dev/null")
