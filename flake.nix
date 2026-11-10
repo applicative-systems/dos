@@ -137,6 +137,29 @@
             pkgs.runCommand name { } "touch $out"
           )
         ) assertionCases
+        # pti= is x86-only: the unknown parameter must not show up on aarch64.
+        // {
+          konf-7-16-no-pti-on-aarch64 =
+            let
+              eval = lib.nixosSystem {
+                modules = [
+                  inputs.self.nixosModules.default
+                  {
+                    grundschutz.requirements."KONF.7.16".enable = true;
+                    system.stateVersion = "25.05";
+                    nixpkgs.hostPlatform = "aarch64-linux";
+                  }
+                ];
+              };
+              params = eval.config.boot.kernelParams;
+              failed = map (a: a.message) (
+                builtins.filter (a: !a.assertion && lib.hasPrefix "KONF." a.message) eval.config.assertions
+              );
+            in
+            assert lib.assertMsg (!(builtins.elem "pti=on" params)) "pti=on on aarch64";
+            assert lib.assertMsg (failed == [ ]) (lib.concatStringsSep "\n" failed);
+            pkgs.runCommand "konf-7-16-no-pti-on-aarch64" { } "touch $out";
+        }
         # The whole profile must evaluate without any KONF assertion firing on
         # an ordinary configuration: requirements must not contradict each other.
         // {
