@@ -10,6 +10,7 @@
     mkdocs-flake = {
       url = "github:applicative-systems/mkdocs-flake";
       inputs.flake-parts.follows = "flake-parts";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
