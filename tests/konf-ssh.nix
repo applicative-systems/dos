@@ -6,15 +6,39 @@
 # The expected algorithm sets are taken from BSI TR-02102-4 (2026-01), tables 2-5.
 { hostPkgs, ... }:
 let
-  keys = hostPkgs.runCommand "konf-ssh-test-keys" { nativeBuildInputs = [ hostPkgs.openssh ]; } ''
-    mkdir $out
-    ssh-keygen -q -t ecdsa -b 256 -N "" -f $out/ecdsa
-    ssh-keygen -q -t ed25519 -N "" -f $out/ed25519
-  '';
+  keys = {
+    ecdsa = {
+      public = "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBIyl43eQdeOcA7fjbtLzi84I19vYYZ1nI/Nx1lMs9bbZHe+4WV7VmjER2J2SjP+rTB9vW047Rc9fUtE43k8QY4k= snakeoil-ecdsa";
+      private = ''
+        -----BEGIN OPENSSH PRIVATE KEY-----
+        b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAaAAAABNlY2RzYS
+        1zaGEyLW5pc3RwMjU2AAAACG5pc3RwMjU2AAAAQQSMpeN3kHXjnAO3427S84vOCNfb2GGd
+        ZyPzcdZTLPW22R3vuFle1ZoxEdidkoz/q0wfb1tOO0XPX1LRON5PEGOJAAAAqCRz328kc9
+        9vAAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBIyl43eQdeOcA7fj
+        btLzi84I19vYYZ1nI/Nx1lMs9bbZHe+4WV7VmjER2J2SjP+rTB9vW047Rc9fUtE43k8QY4
+        kAAAAhAIQR9zEeY4DgGdQW/e8awSt6SB5tPu5WXbof7M/Ci9+LAAAADnNuYWtlb2lsLWVj
+        ZHNhAQ==
+        -----END OPENSSH PRIVATE KEY-----
+      '';
+    };
+    ed25519 = {
+      public = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJZ3re3LpKHaBvrFX2w+aqaQsEafd7GoyohXr/SIlWFS snakeoil-ed25519";
+      private = ''
+        -----BEGIN OPENSSH PRIVATE KEY-----
+        b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+        QyNTUxOQAAACCWd63ty6Sh2gb6xV9sPmqmkLBGn3exqMqIV6/0iJVhUgAAAJg3aOr1N2jq
+        9QAAAAtzc2gtZWQyNTUxOQAAACCWd63ty6Sh2gb6xV9sPmqmkLBGn3exqMqIV6/0iJVhUg
+        AAAEB1mgZ7NA0BVWu0uEUXlWFHbR5PEBaeXsxCyScM0dkGOJZ3re3LpKHaBvrFX2w+aqaQ
+        sEafd7GoyohXr/SIlWFSAAAAEHNuYWtlb2lsLWVkMjU1MTkBAgMEBQ==
+        -----END OPENSSH PRIVATE KEY-----
+      '';
+    };
+  };
   authorized = [
-    "${keys}/ecdsa.pub"
-    "${keys}/ed25519.pub"
+    keys.ecdsa.public
+    keys.ed25519.public
   ];
+  privateKey = name: hostPkgs.writeText "snakeoil-${name}" keys.${name}.private;
 in
 {
   name = "konf-ssh";
@@ -40,16 +64,16 @@ in
             isNormalUser = true;
             extraGroups = [ "wheel" ];
             hashedPassword = "*";
-            openssh.authorizedKeys.keyFiles = authorized;
+            openssh.authorizedKeys.keys = authorized;
           };
           bob = {
             isNormalUser = true;
             hashedPassword = "*";
-            openssh.authorizedKeys.keyFiles = authorized;
+            openssh.authorizedKeys.keys = authorized;
           };
           root = {
             hashedPassword = lib.mkForce "*";
-            openssh.authorizedKeys.keyFiles = authorized;
+            openssh.authorizedKeys.keys = authorized;
           };
         };
       };
@@ -71,8 +95,8 @@ in
     server.wait_for_unit("sshd.socket")
     server.wait_for_open_port(22)
 
-    client.succeed("install -m600 ${keys}/ecdsa /root/id_ecdsa")
-    client.succeed("install -m600 ${keys}/ed25519 /root/id_ed25519")
+    client.succeed("install -m600 ${privateKey "ecdsa"} /root/id_ecdsa")
+    client.succeed("install -m600 ${privateKey "ed25519"} /root/id_ed25519")
 
     def ssh(user, key):
         return (
@@ -82,6 +106,15 @@ in
 
     def login_works(user, key):
         status, out = client.execute(ssh(user, key))
+        if status != 0:
+            # sshd's reason (e.g. StrictModes: bad ownership or modes) is only
+            # in the server's journal; show it together with the checked path
+            _, journal = server.execute("journalctl --no-pager -o cat -t sshd -t sshd-session -t sshd-auth")
+            _, owners = server.execute(
+                f"stat -c '%U:%G %a %n' / /etc /etc/ssh /etc/ssh/authorized_keys.d "
+                f"$(readlink -f /etc/ssh/authorized_keys.d/{user})"
+            )
+            out += f"\n--- sshd journal ---\n{journal}\n--- ownership ---\n{owners}"
         t.assertEqual(status, 0, out)
 
     def login_refused(user, key):
