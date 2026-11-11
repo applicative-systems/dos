@@ -30,9 +30,9 @@ Controls without a mapping entry are `unmapped` (not yet triaged). Only groups w
 | NOT | Notfallplanung | 26 | 0 | 0 | 0 | 0 | 0 | 0 | 26 |
 | DET | Detektion | 42 | 0 | 0 | 0 | 0 | 0 | 0 | 42 |
 | REA | Sicherheitsvorfallsbehandlung | 10 | 0 | 0 | 0 | 0 | 0 | 0 | 10 |
-| KONF | Konfiguration | 113 | 1 | 15 | 14 | 17 | 9 | 57 | 0 |
+| KONF | Konfiguration | 113 | 1 | 17 | 11 | 18 | 9 | 57 | 0 |
 | DEV | Entwicklung | 29 | 0 | 0 | 0 | 0 | 0 | 0 | 29 |
-| **all** | | **652** | 1 | 15 | 14 | 17 | 9 | 57 | 539 |
+| **all** | | **652** | 1 | 17 | 11 | 18 | 9 | 57 | 539 |
 
 ## KONF: Konfiguration
 
@@ -52,8 +52,8 @@ Controls without a mapping entry are `unmapped` (not yet triaged). Only groups w
 | KONF.2.7 | erhöht | manual | Souveräne Werkzeuge |  |  | Level erhöht, optional (KANN). Sovereign tooling is a procurement decision. |
 | KONF.2.8 | erhöht | manual | Alternative Administrationszugänge |  |  | Level erhöht, optional. Alternative admin access (e.g. serial/out-of-band) is deployment specific. |
 | KONF.2.9 | erhöht | planned | Abgesicherter und authentisierter Bootprozess |  |  | Level erhöht. Assert Secure Boot is active (e.g. lanzaboote) when the option is available; exempt for VMs. |
-| KONF.3.1 | normal-SdT | planned | Kryptographischer Hardwarespeicher |  |  | Assert TPM use (security.tpm2.enable) with exempt for hardware without TPM. |
-| KONF.3.2 | normal-SdT | planned | Speicherverschlüsselung |  |  | Assert encrypted root (initrd LUKS, or ZFS native encryption). Exempt option for cloud/VM setups where the provider encrypts. |
+| KONF.3.1 | normal-SdT | partial | Kryptographischer Hardwarespeicher | [`modules/konf/3-1-cryptographic-hardware-storage.nix`](../modules/konf/3-1-cryptographic-hardware-storage.nix) | [`tests/konf-3-1.nix`](../tests/konf-3-1.nix) | A TPM 2.0 is the cryptographic hardware storage. The TPM2 stack (security.tpm2: udev rules, tss group owning /dev/tpmrm0) is enabled and asserted, so systemd-cryptenroll, systemd-creds and services can use it; the VM test uses an emulated TPM. Hardware or VMs without TPM set the requirement exempt. Not covered: whether a TPM is present and whether keys are actually stored in it (cannot be seen at evaluation time). |
+| KONF.3.2 | normal-SdT | partial | Speicherverschlüsselung | [`modules/konf/3-2-storage-encryption.nix`](../modules/konf/3-2-storage-encryption.nix) |  | At least one boot.initrd.luks.devices entry must exist (fileSystems.<n>.encrypted and disko LUKS layouts create one). Encryption invisible to the NixOS configuration (ZFS native, bcachefs, self-encrypting drives) is declared in otherEncryption. Unencrypted cloud volumes need an exemption. Not covered: that every persistent filesystem is on an encrypted device, and the LUKS cipher (TR-02102-1). Booting from LUKS is not VM-tested. |
 | KONF.3.3 | normal-SdT | not-applicable | SIM-PIN |  |  | SIM/mobile connectivity; server scope. |
 | KONF.3.4 | erhöht | not-applicable | Physischer Diebstahlschutz |  |  | Mobile devices. |
 | KONF.3.5 | erhöht | not-applicable | Standortbestimmung |  |  | Location determination, optional (KANN); not meaningful for servers. |
@@ -71,7 +71,7 @@ Controls without a mapping entry are `unmapped` (not yet triaged). Only groups w
 | KONF.6.2 | normal-SdT | deferred | Gemeinsam genutzte Verzeichnisse |  |  | File server role only; handle in a role-specific module (Samba/NFS). |
 | KONF.6.3 | erhöht | not-applicable | Kiosk-Modus |  |  | Mobile kiosk mode. |
 | KONF.6.4 | normal-SdT | partial | Privilegierte Systemfunktionen | [`modules/konf/6-4-privileged-functions.nix`](../modules/konf/6-4-privileged-functions.nix) | [`tests/konf-mounts-privileges.nix`](../tests/konf-mounts-privileges.nix) | sudo executable only for group wheel, sudo asks wheel members for a password (opt-out allowPasswordlessSudo), su requires wheel. privilegeEscalation = run0 replaces sudo with systemd run0 (polkit, no setuid sudo). Not covered: role-based administration (KANN), inventory of setuid wrappers. |
-| KONF.6.5 | erhöht | planned | Dynamische Zugriffskontrolle im System |  |  | Level erhöht. Mandatory access control: assert security.apparmor.enable. |
+| KONF.6.5 | erhöht | manual | Dynamische Zugriffskontrolle im System |  |  | Level erhöht, optional (KANN). Dynamic access control means context-dependent access decisions (device state, location, time, data classification) under a fixed policy. That is an identity/application-level mechanism; AppArmor or SELinux are static mandatory access control and do not implement it, so there is no generic NixOS setting for it. |
 | KONF.6.6 | normal-SdT | deferred | Getrennte Datenhaltung |  |  | Application level. |
 | KONF.6.7 | normal-SdT | deferred | Privilegierte Funktionen der Anwendung |  |  | Application level. |
 | KONF.6.8 | normal-SdT | deferred | Berechtigungen des Webserver-Prozesses |  |  | Web server role. |

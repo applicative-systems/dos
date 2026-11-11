@@ -35,6 +35,7 @@
             flake = "github:example/infra";
           };
           grundschutz.requirements."KONF.4.5".allowedTimeServers = [ "ntp.example.org" ];
+          boot.initrd.luks.devices.cryptroot.device = "/dev/disk/by-partlabel/cryptroot";
           users.users.alice = {
             isNormalUser = true;
             extraGroups = [ "wheel" ];

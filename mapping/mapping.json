@@ -65,14 +65,15 @@
     "rationale": "Level erhöht. Assert Secure Boot is active (e.g. lanzaboote) when the option is available; exempt for VMs."
   },
   "KONF.3.1": {
-    "status": "planned",
-    "approach": "assert",
-    "rationale": "Assert TPM use (security.tpm2.enable) with exempt for hardware without TPM."
+    "status": "partial",
+    "modules": ["modules/konf/3-1-cryptographic-hardware-storage.nix"],
+    "tests": ["tests/konf-3-1.nix"],
+    "rationale": "A TPM 2.0 is the cryptographic hardware storage. The TPM2 stack (security.tpm2: udev rules, tss group owning /dev/tpmrm0) is enabled and asserted, so systemd-cryptenroll, systemd-creds and services can use it; the VM test uses an emulated TPM. Hardware or VMs without TPM set the requirement exempt. Not covered: whether a TPM is present and whether keys are actually stored in it (cannot be seen at evaluation time)."
   },
   "KONF.3.2": {
-    "status": "planned",
-    "approach": "assert",
-    "rationale": "Assert encrypted root (initrd LUKS, or ZFS native encryption). Exempt option for cloud/VM setups where the provider encrypts."
+    "status": "partial",
+    "modules": ["modules/konf/3-2-storage-encryption.nix"],
+    "rationale": "At least one boot.initrd.luks.devices entry must exist (fileSystems.<n>.encrypted and disko LUKS layouts create one). Encryption invisible to the NixOS configuration (ZFS native, bcachefs, self-encrypting drives) is declared in otherEncryption. Unencrypted cloud volumes need an exemption. Not covered: that every persistent filesystem is on an encrypted device, and the LUKS cipher (TR-02102-1). Booting from LUKS is not VM-tested."
   },
   "KONF.3.3": {
     "status": "not-applicable",
@@ -158,9 +159,8 @@
     "rationale": "sudo executable only for group wheel, sudo asks wheel members for a password (opt-out allowPasswordlessSudo), su requires wheel. privilegeEscalation = run0 replaces sudo with systemd run0 (polkit, no setuid sudo). Not covered: role-based administration (KANN), inventory of setuid wrappers."
   },
   "KONF.6.5": {
-    "status": "planned",
-    "approach": "assert",
-    "rationale": "Level erhöht. Mandatory access control: assert security.apparmor.enable."
+    "status": "manual",
+    "rationale": "Level erhöht, optional (KANN). Dynamic access control means context-dependent access decisions (device state, location, time, data classification) under a fixed policy. That is an identity/application-level mechanism; AppArmor or SELinux are static mandatory access control and do not implement it, so there is no generic NixOS setting for it."
   },
   "KONF.6.6": {
     "status": "deferred",

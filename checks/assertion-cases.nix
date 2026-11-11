@@ -15,6 +15,9 @@
   "KONF.2.4".hardware.bluetooth.enable = true;
   "KONF.2.5".system.configurationRevision = null;
   "KONF.2.5/dirty".system.configurationRevision = "0123abc-dirty";
+  "KONF.3.1".security.tpm2.enable = false;
+  # no LUKS device, no other encryption declared
+  "KONF.3.2" = { };
   "KONF.3.8".services.udisks2.enable = true;
   "KONF.4.3".services.openssh = {
     enable = true;
