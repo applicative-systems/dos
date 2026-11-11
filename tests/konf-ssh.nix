@@ -2,7 +2,7 @@
 # Covers KONF.2.2, KONF.4.3 and KONF.4.4 on a real sshd, in containers (only
 # userspace is involved, so no VM is needed). KONF.5.1 cannot be
 # enabled on a test VM: the test driver gives root an empty password and
-# console autologin (covered by the 5-1 assertion test in flake.nix instead).
+# console autologin (covered by the 5-1 assertion test in checks/assertion-cases.nix instead).
 # The expected algorithm sets are taken from BSI TR-02102-4 (2026-01), tables 2-5.
 { hostPkgs, ... }:
 let

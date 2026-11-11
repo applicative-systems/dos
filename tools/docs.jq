@@ -1,6 +1,6 @@
 # Renders the module documentation (flake output `packages.<system>.docs`):
 # README.md plus one <ID>.md per requirement that has a module.
-# Emits a stream of {file, text}; flake.nix writes each one out.
+# Emits a stream of {file, text}; nix/packages.nix writes each one out.
 # Usage: jq -c --slurpfile m mapping/mapping.json --slurpfile o options.json \
 #   --slurpfile f facts.json -f tools/docs.jq catalog/Grundschutz++-resolved_catalog.json
 #   $f[0]: { declared: [id], profiles: { <name>: [id] } }

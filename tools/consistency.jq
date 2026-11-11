@@ -1,5 +1,5 @@
 # Cross-checks modules, mapping/mapping.json, assertion cases and the profile.
-# Inputs (see the `consistency` check in flake.nix):
+# Inputs (see the `consistency` check in checks/repo.nix):
 #   $f[0]: { declared, profile, withAssertionCase, moduleFiles }
 #   $m[0]: mapping/mapping.json
 #   $c[0]: the BSI catalog
@@ -29,7 +29,7 @@ $f[0] as $f
 
     # every requirement has a contradiction in assertionCases
     ($f.declared[] | select(. as $id | $f.withAssertionCase | index($id) | not)
-      | "\(.) has no entry in assertionCases (flake.nix)"),
+      | "\(.) has no entry in checks/assertion-cases.nix"),
 
     # the normal-SdT profile enables every normal-SdT requirement
     ($f.declared[] | select($level[.] == "normal-SdT" and (. as $id | $f.profile | index($id) | not))

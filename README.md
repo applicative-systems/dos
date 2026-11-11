@@ -22,6 +22,8 @@ grundschutz.requirements."KONF.7.15".exempt = "Firewalling done upstream, see R-
 - `modules/<topic>/` – (flake output `nixosModules.<id>`) one module per requirement; enforce settings and/or assert on user config
 - `profiles/` – (flake output `nixosProfiles`) bundles per security level (`normal-SdT`, `erhöht`)
 - `tests/` – NixOS VM tests that check runtime state
+- `checks/` – evaluation checks; `checks/assertion-cases.nix` holds one contradicting config per requirement whose assertion must fire
+- `nix/` – flake plumbing (module discovery, packages, formatter)
 - `docs/STATUS.md` – generated status of all 652 catalog controls (`tools/update-status.sh`; `nix flake check` fails if it is stale)
 - `nix build .#docs` – Markdown page per implemented requirement: our interpretation, options, tests and the original BSI statement and guidance (CC BY-SA 4.0)
 - `nix build .#modules-markdown` – NixOS option reference of all modules (`nixosOptionsDoc`)
