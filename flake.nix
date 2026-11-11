@@ -32,7 +32,13 @@
           enable = true;
           settings.Ciphers = [ "3des-cbc" ];
         };
+        "KONF.2.3".users.users.alice = {
+          isNormalUser = true;
+          initialPassword = "changeme";
+        };
         "KONF.2.4".hardware.bluetooth.enable = true;
+        "KONF.2.5".system.configurationRevision = null;
+        "KONF.2.5/dirty".system.configurationRevision = "0123abc-dirty";
         "KONF.3.8".services.udisks2.enable = true;
         "KONF.4.3".services.openssh = {
           enable = true;
@@ -54,14 +60,30 @@
             openssh.authorizedKeys.keys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPlaceholder alice@example" ];
           };
         };
+        # no allowlist given
+        "KONF.4.5" = { };
+        "KONF.4.5/chrony" = {
+          grundschutz.requirements."KONF.4.5".allowedTimeServers = [ "ntp.example.org" ];
+          services.chrony = {
+            enable = true;
+            servers = [ "pool.ntp.org" ];
+          };
+        };
         "KONF.5.1".users.users.alice = {
           isNormalUser = true;
           hashedPassword = "";
         };
         "KONF.6.4".security.sudo.execWheelOnly = false;
+        "KONF.7.9".nix.settings.allowed-users = [ "*" ];
         "KONF.7.10".boot.specialFileSystems."/dev/shm".options = lib.mkForce [ "nosuid" ];
         "KONF.7.15".networking.firewall.enable = false;
         "KONF.7.16".boot.kernel.sysctl."kernel.kptr_restrict" = 0;
+        "KONF.8.1".system.autoUpgrade.enable = false;
+        # builds the update but never activates it
+        "KONF.8.2".system.autoUpgrade = {
+          enable = true;
+          operation = "boot";
+        };
       };
     in
     {
@@ -172,6 +194,12 @@
                     system.stateVersion = "25.05";
                     nixpkgs.hostPlatform = system;
                     services.openssh.enable = true;
+                    system.configurationRevision = "0123456789abcdef0123456789abcdef01234567";
+                    system.autoUpgrade = {
+                      enable = true;
+                      flake = "github:example/infra";
+                    };
+                    grundschutz.requirements."KONF.4.5".allowedTimeServers = [ "ntp.example.org" ];
                     users.users.alice = {
                       isNormalUser = true;
                       extraGroups = [ "wheel" ];
@@ -190,6 +218,43 @@
             in
             assert lib.assertMsg (failed == [ ]) (lib.concatStringsSep "\n" failed);
             pkgs.runCommand "profile-konf-normal-sdt" { } "touch $out";
+        }
+        # Modules, mapping, assertion cases and profile must agree with each other.
+        // {
+          consistency =
+            let
+              eval = lib.nixosSystem {
+                modules = [
+                  inputs.self.nixosProfiles.konf-normal-sdt
+                  {
+                    system.stateVersion = "25.05";
+                    nixpkgs.hostPlatform = system;
+                  }
+                ];
+              };
+              reqs = eval.config.grundschutz.requirements;
+              facts = builtins.toFile "facts.json" (
+                builtins.toJSON {
+                  declared = lib.attrNames reqs;
+                  profile = lib.attrNames (lib.filterAttrs (_: r: r.enable) reqs);
+                  withAssertionCase = lib.unique (
+                    map (k: builtins.head (lib.splitString "/" k)) (lib.attrNames assertionCases)
+                  );
+                  moduleFiles = map (p: lib.removePrefix "${toString ./.}/" (toString p)) (
+                    lib.attrValues requirementModules
+                  );
+                }
+              );
+            in
+            pkgs.runCommand "consistency" { nativeBuildInputs = [ pkgs.jq ]; } ''
+              jq -n -r \
+                --slurpfile f ${facts} \
+                --slurpfile m ${./mapping/mapping.json} \
+                --slurpfile c ${./catalog/Grundschutz++-resolved_catalog.json} \
+                -f ${./tools/consistency.jq} > errors
+              if [ -s errors ]; then cat errors; exit 1; fi
+              touch $out
+            '';
         }
       ) linuxPkgs;
 

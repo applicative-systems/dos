@@ -42,9 +42,10 @@
     "rationale": "Disables Bluetooth, FireWire, rarely used network protocols/filesystems (kernel modules), avahi, printing and the default package set. List is a starting point, not exhaustive. Deviations via keepKernelModules and keepServices. Not covered: weak crypto algorithms (KONF.2.2), unneeded users, firmware features."
   },
   "KONF.2.5": {
-    "status": "planned",
-    "approach": "assert",
-    "rationale": "Configuration drift. NixOS is declarative; plan: assert system.configurationRevision is set so a running system is traceable to a commit."
+    "status": "partial",
+    "modules": ["modules/konf/2-5-configuration-review.nix"],
+    "tests": ["tests/konf-2-5.nix"],
+    "rationale": "The flake in git is the reference state and the system closure is immutable. Asserted: system.configurationRevision is set (nixos-version --configuration-revision) and not a dirty tree unless allowDirty. Not covered: mutable state outside the closure (/var, unmanaged /etc files, imperative changes) is not compared against the reference."
   },
   "KONF.2.6": {
     "status": "not-applicable",
@@ -122,9 +123,10 @@
     "rationale": "SSH only. No root login, login restricted to allowGroups (default wheel), TCP/agent/X11 forwarding, gateway ports and tunnels off unless allowForwarding is set. Deploy tools need a normal admin user with sudo instead of root. Lockout guard: evaluation fails if no user in allowGroups has an authorized key (ECDSA when KONF.2.2 is on)."
   },
   "KONF.4.5": {
-    "status": "planned",
-    "approach": "assert",
-    "rationale": "Time sources must be authorized. Plan: option for NTP servers, enforce on timesyncd/chrony, assert no unlisted sources."
+    "status": "partial",
+    "modules": ["modules/konf/4-5-time-sources.nix"],
+    "tests": ["tests/konf-4-5.nix"],
+    "rationale": "Authorized time sources are listed in allowedTimeServers (no default). networking.timeServers and timesyncd NTP=/FallbackNTP= are set to it; timesyncd, chrony and ntpd are asserted to use only listed servers. Not covered: NTP servers from DHCP (networkd UseNTP, dhcpcd), ntpd-rs custom sources, authenticated NTP (NTS)."
   },
   "KONF.5.1": {
     "status": "partial",
@@ -242,9 +244,10 @@
     "rationale": "Level erhöht. Multiple scan engines; product decision."
   },
   "KONF.7.9": {
-    "status": "planned",
-    "approach": "enforce",
-    "rationale": "Restrict installation of software: users.mutableUsers false, nix.settings.allowed-users restricted to wheel/root."
+    "status": "partial",
+    "modules": ["modules/konf/7-9-installation-restriction.nix"],
+    "tests": ["tests/konf-7-9.nix"],
+    "rationale": "Software is installed through the Nix daemon: nix.settings.allowed-users is limited to allowedUsers (default root and @wheel), and neither allowed-users nor trusted-users may contain \"*\". The system closure is read-only. Not covered: users downloading and running binaries in writable locations such as /home (see KONF.7.10)."
   },
   "KONF.7.10": {
     "status": "partial",
@@ -282,14 +285,14 @@
     "rationale": "Interpretation: kernel exploit mitigations. Sysctl limits (kptr_restrict, dmesg_restrict, unprivileged BPF, BPF JIT hardening, ASLR, ptrace_scope, perf_event_paranoid), hardened boot parameters (slab_nomerge, init_on_alloc/free, page_alloc.shuffle, randomize_kstack_offset, vsyscall=none), page table isolation, kexec disabled. Contradicting user settings are reported via assertions."
   },
   "KONF.8.1": {
-    "status": "planned",
-    "approach": "assert",
-    "rationale": "Monitor for pending security updates. Plan: assert update checking is configured (autoUpgrade or vulnix); exempt for externally managed deployments."
+    "status": "partial",
+    "modules": ["modules/konf/8-1-update-monitoring.nix"],
+    "rationale": "system.autoUpgrade must be enabled; centrally pushed deployments (CI, colmena, deploy-rs) set the requirement exempt. autoUpgrade only finds updates that reach the flake lock file; bumping inputs is up to the user. Notifying administrators is not covered."
   },
   "KONF.8.2": {
-    "status": "planned",
-    "approach": "assert",
-    "rationale": "Automatic security updates for applications: assert system.autoUpgrade (flake-based) or exempt with reason."
+    "status": "partial",
+    "modules": ["modules/konf/8-2-automatic-updates.nix"],
+    "rationale": "Applications are part of the NixOS closure, so system.autoUpgrade must be enabled and activate updates (operation switch, or boot with allowReboot). Not covered: software updated outside Nix (containers, language package managers), and updates only arrive once the lock file is bumped."
   },
   "KONF.9.1": {
     "status": "planned",
