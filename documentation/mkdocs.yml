@@ -1,0 +1,60 @@
+site_name: Deutschland-OS
+site_description: NixOS modules implementing our interpretation of BSI Grundschutz++
+repo_url: https://github.com/applicative-systems/dos
+repo_name: applicative-systems/dos
+edit_uri: edit/main/documentation/docs
+copyright: Code MIT; BSI requirement texts CC BY-SA 4.0 (Bundesamt für Sicherheit in der Informationstechnik)
+
+plugins:
+  # navigation order from .pages files (the requirement pages are generated)
+  - awesome-pages
+  - search
+  - offline
+
+theme:
+  name: material
+  # no Google Fonts: the build runs in the Nix sandbox
+  font: false
+  language: en
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - content.action.view
+    - content.code.copy
+    - navigation.indexes
+    - navigation.sections
+    - navigation.tabs
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.suggest
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme)"
+      primary: black
+      accent: blue
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      primary: black
+      accent: blue
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      primary: grey
+      accent: blue
+      scheme: slate
+      toggle:
+        icon: material/weather-night
+        name: Switch to system preference
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - tables
+  - toc:
+      permalink: true

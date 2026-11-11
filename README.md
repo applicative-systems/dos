@@ -23,10 +23,11 @@ grundschutz.requirements."KONF.7.15".exempt = "Firewalling done upstream, see R-
 - `profiles/` – (flake output `nixosProfiles`) bundles per security level (`normal-SdT`, `erhöht`)
 - `tests/` – NixOS VM tests that check runtime state
 - `checks/` – evaluation checks; `checks/assertion-cases.nix` holds one contradicting config per requirement whose assertion must fire
-- `nix/` – flake plumbing (module discovery, packages, formatter)
+- `nix/` – flake plumbing (module discovery, packages, website, formatter)
 - `docs/STATUS.md` – generated status of all 652 catalog controls (`tools/update-status.sh`; `nix flake check` fails if it is stale)
 - `nix build .#docs` – Markdown page per implemented requirement: our interpretation, options, tests and the original BSI statement and guidance (CC BY-SA 4.0)
 - `nix build .#modules-markdown` – NixOS option reference of all modules (`nixosOptionsDoc`)
+- `documentation/` – website ([mkdocs-flake](https://applicative.systems/mkdocs-flake/)): `nix build .#documentation` combines the hand-written pages with the requirement pages, the option reference and the status (`nix/documentation.nix`)
 - `tools/coverage.sh` – catalog controls vs. mapping
 
 Code is MIT; `catalog/` is CC BY-SA 4.0 (REUSE.toml). Don't paste BSI requirement text into `.nix` files, reference IDs only.
