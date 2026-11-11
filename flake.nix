@@ -111,6 +111,8 @@
         // {
           formatting = inputs.self.formatter.${system}.check inputs.self;
 
+          inherit (inputs.self.packages.${system}) docs modules-markdown;
+
           status-up-to-date = pkgs.runCommand "status-up-to-date" { } ''
             diff ${./docs/STATUS.md} ${inputs.self.packages.${system}.status} \
               || { echo "docs/STATUS.md is stale: run tools/update-status.sh"; exit 1; }
@@ -258,12 +260,75 @@
         }
       ) linuxPkgs;
 
-      packages = builtins.mapAttrs (_system: pkgs: {
-        # docs/STATUS.md: every catalog control joined with the mapping
-        status =
-          pkgs.runCommand "STATUS.md" { nativeBuildInputs = [ pkgs.jq ]; }
-            "jq -r --slurpfile m ${./mapping/mapping.json} -f ${./tools/status.jq} ${./catalog/Grundschutz++-resolved_catalog.json} > $out";
-      }) inputs.nixpkgs.legacyPackages;
+      packages = builtins.mapAttrs (
+        _system: pkgs:
+        let
+          # Options do not depend on the target platform; any Linux will do.
+          eval = lib.nixosSystem {
+            modules = [
+              inputs.self.nixosProfiles.konf-normal-sdt
+              {
+                system.stateVersion = "25.05";
+                nixpkgs.hostPlatform = "x86_64-linux";
+              }
+            ];
+          };
+          optionsDoc = pkgs.nixosOptionsDoc {
+            options = eval.options.grundschutz;
+            # "Declared by": repository paths linked to GitHub instead of store paths
+            # (plain strings would be rendered as <nixpkgs/...> links).
+            transformOptions =
+              opt:
+              opt
+              // {
+                declarations = map (
+                  d:
+                  let
+                    name = lib.removePrefix "${toString ./.}/" (toString d);
+                  in
+                  {
+                    inherit name;
+                    url = "https://github.com/applicative-systems/dos/blob/${inputs.self.rev or "main"}/${name}";
+                  }
+                ) opt.declarations;
+              };
+          };
+        in
+        {
+          # NixOS option reference of all requirement modules, rendered by nixosOptionsDoc.
+          modules-markdown = optionsDoc.optionsCommonMark;
+
+          # Markdown documentation of every requirement module: our interpretation,
+          # options and the original BSI text (CC BY-SA, hence its own output).
+          docs =
+            let
+              reqs = eval.config.grundschutz.requirements;
+              options = optionsDoc.optionsJSON;
+              facts = builtins.toFile "facts.json" (
+                builtins.toJSON {
+                  declared = lib.attrNames reqs;
+                  profiles.konf-normal-sdt = lib.attrNames (lib.filterAttrs (_: r: r.enable) reqs);
+                }
+              );
+            in
+            pkgs.runCommand "grundschutz-docs" { nativeBuildInputs = [ pkgs.jq ]; } ''
+              mkdir $out
+              jq -c \
+                --slurpfile m ${./mapping/mapping.json} \
+                --slurpfile o ${options}/share/doc/nixos/options.json \
+                --slurpfile f ${facts} \
+                -f ${./tools/docs.jq} ${./catalog/Grundschutz++-resolved_catalog.json} \
+                | while IFS= read -r page; do
+                    jq -r .text <<<"$page" > "$out/$(jq -r .file <<<"$page")"
+                  done
+            '';
+
+          # docs/STATUS.md: every catalog control joined with the mapping
+          status =
+            pkgs.runCommand "STATUS.md" { nativeBuildInputs = [ pkgs.jq ]; }
+              "jq -r --slurpfile m ${./mapping/mapping.json} -f ${./tools/status.jq} ${./catalog/Grundschutz++-resolved_catalog.json} > $out";
+        }
+      ) inputs.nixpkgs.legacyPackages;
 
       devShells = builtins.mapAttrs (system: pkgs: {
         default = pkgs.mkShell {
