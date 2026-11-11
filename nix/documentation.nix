@@ -4,8 +4,8 @@
 #   requirements/  one page per requirement (packages.docs)
 #   options.md     NixOS option reference (packages.modules-markdown)
 #   status.md      docs/STATUS.md (packages.status)
-# `nix run .#watch-documentation` serves documentation/ as is, i.e. without
-# the generated pages.
+# documentation/docs/ holds placeholders for them, so that
+# `nix run .#watch-documentation` (which serves documentation/ as is) works.
 { self', pkgs }:
 let
   repoBlob = "https://github.com/applicative-systems/dos/blob/main";
@@ -16,6 +16,8 @@ let
     # the mkdocs root is symlink-copied from the store: directories are read-only
     chmod -R u+w docs
 
+    # replace the placeholders (store symlinks, not writable in place)
+    rm -r docs/requirements docs/options.md docs/status.md
     mkdir docs/requirements
     cp ${self'.packages.docs}/KONF.*.md docs/requirements/
     cp ${self'.packages.docs}/README.md docs/requirements/index.md
