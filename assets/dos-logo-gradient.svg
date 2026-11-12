@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Gradient variant: generated from dos-logo.svg; edit that file and re-run tools/logo-variants.py -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="155.33963mm" height="136.68491mm" viewBox="0 0 550.41603 484.31659">
+  <defs>
+    <linearGradient id="black" gradientUnits="userSpaceOnUse" gradientTransform="translate(-62.000952,-97.110878)" x1="200.59668" y1="351.41116" x2="290.08701" y2="506.18814">
+      <stop offset="0" stop-color="#4a4a4a"/>
+      <stop offset="0.23168644" stop-color="#535353"/>
+      <stop offset="1" stop-color="#636363"/>
+    </linearGradient>
+    <linearGradient id="red" gradientUnits="userSpaceOnUse" gradientTransform="translate(-62.000952,-97.110878)" x1="200.59668" y1="351.41116" x2="290.08701" y2="506.18814">
+      <stop offset="0" stop-color="#b00000"/>
+      <stop offset="0.23168644" stop-color="#c60000"/>
+      <stop offset="1" stop-color="#dd0000"/>
+    </linearGradient>
+    <linearGradient id="gold" gradientUnits="userSpaceOnUse" gradientTransform="translate(-62.000952,-97.110878)" x1="200.59668" y1="351.41116" x2="290.08701" y2="506.18814">
+      <stop offset="0" stop-color="#e0a800"/>
+      <stop offset="0.23168644" stop-color="#efb900"/>
+      <stop offset="1" stop-color="#ffcc00"/>
+    </linearGradient>
+    <path id="path3336-6" d="m 176.89763,247.65195 122.19683,211.67512 -56.15706,0.5268 -32.6236,-56.8692 -32.85645,56.5653 -27.90237,-0.011 -14.29086,-24.6896 46.81047,-80.4901 -33.22946,-57.8257 z"/>
+    <path id="path4260-0" d="m 176.89763,247.65195 122.19683,211.67512 -56.15706,0.5268 -32.6236,-56.8692 -32.85645,56.5653 -27.90237,-0.011 -14.29086,-24.6896 46.81047,-80.4901 -33.22946,-57.8256 z"/>
+  </defs>
+  <use xlink:href="#path3336-6" fill="url(#red)"/>
+  <use xlink:href="#path3336-6" fill="url(#gold)" transform="rotate(60,274.46024,242.25299)"/>
+  <use xlink:href="#path3336-6" fill="url(#black)" transform="rotate(-60,274.66048,242.34007)"/>
+  <use xlink:href="#path3336-6" fill="url(#red)" transform="rotate(180,274.76738,242.28372)"/>
+  <use xlink:href="#path4260-0" fill="url(#red)"/>
+  <use xlink:href="#path4260-0" fill="url(#black)" transform="rotate(120,274.68787,241.95667)"/>
+  <use xlink:href="#path4260-0" fill="url(#gold)" transform="rotate(-120,274.63694,242.17028)"/>
+</svg>

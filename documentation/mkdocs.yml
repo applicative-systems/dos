@@ -13,6 +13,9 @@ plugins:
 
 theme:
   name: material
+  # symlink to assets/dos-logo-gradient.svg (copied in by the Nix build)
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
   # no Google Fonts: the build runs in the Nix sandbox
   font: false
   language: en

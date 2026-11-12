@@ -19,6 +19,9 @@ let
     # replace the placeholders (store symlinks, not writable in place)
     rm -r docs/requirements docs/options.md docs/status.md
     mkdir docs/requirements
+    # documentation/ is copied to the store alone: replace the symlink
+    rm docs/assets/logo.svg
+    cp ${../assets/dos-logo-gradient.svg} docs/assets/logo.svg
     cp ${self'.packages.docs}/KONF.*.md docs/requirements/
     cp ${self'.packages.docs}/README.md docs/requirements/index.md
     # awesome-pages: natural order (KONF.7.9 before KONF.7.10)

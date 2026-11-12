@@ -12,3 +12,13 @@ path = "catalog/**"
 precedence = "override"
 SPDX-FileCopyrightText = "Bundesamt für Sicherheit in der Informationstechnik (BSI)"
 SPDX-License-Identifier = "CC-BY-SA-4.0"
+
+# The logo is the NixOS snowflake (nixos-artwork, CC BY 4.0), recoloured.
+[[annotations]]
+path = "assets/dos-logo*.svg"
+precedence = "override"
+SPDX-FileCopyrightText = [
+  "Tim Cuthbertson (NixOS logo)",
+  "the grundschutz-nixos contributors",
+]
+SPDX-License-Identifier = "CC-BY-4.0"
