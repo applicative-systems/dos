@@ -4,7 +4,7 @@ NixOS modules that implement our interpretation of BSI **Grundschutz++** require
 This is not an official BSI product and does not make a system "BSI-compliant".
 
 - [Usage](usage.md): add the modules to your system, enable requirements, deviate explicitly
-- [Requirements](requirements/index.md): one page per implemented requirement with our interpretation, its options and the original BSI text
+- [Requirements](requirements/index.md): one page per KONF requirement: what we enforce and how to configure it, or why there is no module, plus the original BSI text
 - [Status](status.md): all 652 catalog controls and how far we cover them
 - [NixOS options](options.md): reference of every option the modules declare
 

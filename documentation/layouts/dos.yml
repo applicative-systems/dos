@@ -1,0 +1,90 @@
+# Social card (link preview image) layout of the material social plugin.
+# Paths are relative to documentation/, where mkdocs runs.
+size: { width: 1200, height: 630 }
+
+definitions:
+  - &page_title >-
+    {{ page.meta.get("title", page.title) }}
+  - &page_description >-
+    {{ page.meta.get("description", config.site_description) }}
+
+# Custom layouts must declare the meta tags themselves; only the built-in
+# default layout sets them automatically.
+tags:
+  og:type: website
+  og:title: *page_title
+  og:description: *page_description
+  og:image: "{{ image.url }}"
+  og:image:type: "{{ image.type }}"
+  og:image:width: "{{ image.width }}"
+  og:image:height: "{{ image.height }}"
+  og:url: "{{ page.canonical_url }}"
+  twitter:card: summary_large_image
+  twitter:title: *page_title
+  twitter:description: *page_description
+  twitter:image: "{{ image.url }}"
+
+layers:
+  - background:
+      color: white
+
+  # logo (aspect ratio of assets/dos-logo-gradient.svg, 550 x 484)
+  - background:
+      image: docs/assets/logo.svg
+    size: { width: 500, height: 440 }
+    offset: { x: 50, y: 95 }
+
+  # stripe in the flag colours (grey for black, as in the logo)
+  - background:
+      color: "#5c5c5c"
+    size: { width: 6, height: 154 }
+    offset: { x: 605, y: 85 }
+  - background:
+      color: "#dd0000"
+    size: { width: 6, height: 154 }
+    offset: { x: 605, y: 238 }
+  - background:
+      color: "#ffcc00"
+    size: { width: 6, height: 154 }
+    offset: { x: 605, y: 391 }
+
+  - size: { width: 520, height: 250 }
+    offset: { x: 640, y: 80 }
+    typography:
+      content: *page_title
+      align: start
+      color: black
+      overflow: shrink
+      line:
+        amount: 4
+        height: 1.2
+      font:
+        family: Raleway
+        style: Bold
+
+  - size: { width: 520, height: 130 }
+    offset: { x: 640, y: 345 }
+    typography:
+      content: *page_description
+      align: start
+      color: "#444444"
+      overflow: shrink
+      line:
+        amount: 5
+        height: 1.3
+      font:
+        family: Raleway
+        style: Regular
+
+  - size: { width: 520, height: 40 }
+    offset: { x: 640, y: 530 }
+    typography:
+      content: "{{ config.site_name }}"
+      align: start
+      color: "#444444"
+      line:
+        amount: 1
+        height: 1
+      font:
+        family: Raleway
+        style: Bold

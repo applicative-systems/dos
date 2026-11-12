@@ -1,3 +1,7 @@
+---
+description: Add the modules to a NixOS system, enable requirements and deviate from them explicitly.
+---
+
 # Usage
 
 Add the flake as an input and import a profile, or single requirement modules.

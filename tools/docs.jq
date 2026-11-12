@@ -29,6 +29,16 @@ $m[0] as $map
     "-->",
     ""
   ];
+  # YAML front matter: title and description for the social cards (read before
+  # the page heading is parsed). JSON strings are valid YAML.
+  def frontmatter($title; $description): [
+    "---",
+    "title: \($title | tojson)",
+    "description: \($description | tojson)",
+    "---"
+  ];
+  # the start of a text, cut at a word boundary after at most $n characters
+  def summary($n): if length <= $n then . else .[:$n] | sub(" [^ ]*$"; "") + " …" end;
   def attribution: [
     "",
     "---",
@@ -70,7 +80,7 @@ $m[0] as $map
       | [ $opts | to_entries[]
           | select(.value.loc[2] == $id and (.value.loc[3] | IN("enable", "exempt") | not)) ] as $own
       | { file: page($id),
-          text: (header + [
+          text: (frontmatter("\($id) \($c.title)"; "Status: \(status($id)). " + ($mp.rationale // why(status($id))[1] | summary(220))) + header + [
             "# \($id) \($c.title)",
             "",
             "| | |",
@@ -128,7 +138,7 @@ $m[0] as $map
 
   # index
   { file: "README.md",
-    text: (header + [
+    text: (frontmatter("Requirements"; "All \($ids | length) requirements of \($groups | join(", ")): what the modules enforce, what is planned, and why the rest has no module.") + header + [
       "# Grundschutz++ NixOS modules",
       "",
       "One page per requirement of the groups \($groups | join(", ")), with the original BSI text.",

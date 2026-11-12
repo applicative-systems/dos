@@ -15,6 +15,12 @@ plugins:
   # navigation order from .pages files (the requirement pages are generated)
   - awesome-pages
   - search
+  # link preview images; only in the Nix build (fonts and logo are prepared
+  # there, see nix/documentation.nix), not in watch-documentation
+  - social:
+      enabled: !ENV [SOCIAL_CARDS, false]
+      cards_layout_dir: layouts
+      cards_layout: dos
 
 theme:
   name: material
