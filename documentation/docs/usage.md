@@ -33,6 +33,24 @@ Some requirements need input that only you can provide, or they fail evaluation:
 
 KONF.3.1 enables the TPM2 stack; on hardware without TPM, exempt it.
 
+### Desktops and laptops
+
+`nixosProfiles.konf-normal-sdt-desktop` enables the same requirements, with the interpretations a graphical workstation needs:
+
+- KONF.3.8: removable media may be mounted by udisks2 (which GNOME, Plasma and fwupd need), but only `noexec,nosuid,nodev`, and users cannot request `exec`, `suid` or `dev`.
+
+It needs the same input as `konf-normal-sdt`. Settings that desktops commonly add:
+
+```nix
+grundschutz.requirements = {
+  "KONF.2.4".keepServices = [ "bluetooth" "printing" "avahi" ];
+  "KONF.2.5".allowDirty = true; # rebuilding from an uncommitted working tree
+  "KONF.6.4".privilegeEscalation = "run0";
+};
+# update without rebooting the machine under its user (KONF.8.1, KONF.8.2)
+system.autoUpgrade.operation = "switch";
+```
+
 ## Single requirements
 
 `nixosModules.default` declares all requirements without enabling any.

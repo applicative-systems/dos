@@ -36,6 +36,7 @@
           # Non-standard output: bundles enable sets of requirements.
           nixosProfiles = {
             konf-normal-sdt = ./profiles/konf-normal-sdt.nix;
+            konf-normal-sdt-desktop = ./profiles/konf-normal-sdt-desktop.nix;
           };
         };
 

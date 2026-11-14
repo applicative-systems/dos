@@ -19,6 +19,14 @@
   # no LUKS device, no other encryption declared
   "KONF.3.2" = { };
   "KONF.3.8".services.udisks2.enable = true;
+  # desktop mode, but users may request exec on removable media
+  "KONF.3.8/noexec" = {
+    grundschutz.requirements."KONF.3.8".automount = "noexec";
+    services.udisks2 = {
+      enable = true;
+      settings."mount_options.conf".defaults.allow = "exec,noexec";
+    };
+  };
   "KONF.4.3".services.openssh = {
     enable = true;
     settings.PasswordAuthentication = true;

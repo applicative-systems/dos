@@ -99,8 +99,8 @@
   "KONF.3.8": {
     "status": "partial",
     "modules": ["modules/konf/3-8-removable-media.nix"],
-    "tests": ["tests/konf-mounts-privileges.nix"],
-    "rationale": "Disables automounters: udisks2, devmon, gvfs, autofs. Manual mounts stay possible and are not forced to noexec. Desktops will need an opt-out."
+    "tests": ["tests/konf-mounts-privileges.nix", "tests/konf-3-8.nix"],
+    "rationale": "automount = \"off\" (default): disables automounters (udisks2, devmon, gvfs, autofs). automount = \"noexec\" (desktop profile): udisks2/gvfs may mount removable media, but only noexec,nosuid,nodev, and users cannot request exec, suid or dev; devmon and autofs stay off. Not covered: manual mounts by root are not forced to noexec."
   },
   "KONF.4.1": {
     "status": "manual",
@@ -133,7 +133,7 @@
     "status": "partial",
     "modules": ["modules/konf/5-1-system-authentication.nix"],
     "tests": [],
-    "rationale": "Every login must authenticate: users.allowNoPasswordLogin false, no console autologin, no user with an empty hashed password, no PAM service accepting empty passwords. The login PAM service is forced to false because NixOS enables it by default. Covered by the eval assertion test and the profile check only: NixOS VM tests cannot enable it, since the test driver uses an empty root password. Screen lock and MFA are not covered (BER.5.9)."
+    "rationale": "Every login must authenticate: users.allowNoPasswordLogin false, no console autologin, no user with an empty hashed password, no PAM service accepting empty passwords. The login PAM service is forced to false because NixOS enables it by default, and so is the Plasma 6 screen locker (PAM service kde) while Plasma is enabled. Covered by the eval assertion test and the profile check only: NixOS VM tests cannot enable it, since the test driver uses an empty root password. Screen lock and MFA are not covered (BER.5.9)."
   },
   "KONF.5.2": {
     "status": "manual",

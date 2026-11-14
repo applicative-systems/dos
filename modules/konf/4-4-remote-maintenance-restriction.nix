@@ -73,8 +73,12 @@ import ../../lib/mkRequirement.nix {
       };
       # Lockout guard: with root login off and AllowGroups set, someone must
       # still be able to log in. KONF.2.2 limits public keys to ECDSA, so keys
-      # of other types do not count when it is enabled.
-      strictKeys = config.grundschutz.requirements."KONF.2.2".enable;
+      # of other types do not count while it is enforced (enabled, not exempt).
+      strictKeys =
+        let
+          r = config.grundschutz.requirements."KONF.2.2";
+        in
+        r.enable && r.exempt == null;
       acceptedKey =
         k:
         !strictKeys

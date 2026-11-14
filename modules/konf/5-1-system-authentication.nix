@@ -2,6 +2,9 @@
 # Interpretation: every login, local or remote, must authenticate.
 # Rejects accounts with an empty password, PAM services that accept empty
 # passwords, and automatic console login. Remote specifics are in KONF.4.3.
+# Plasma 6 sets allowNullPassword on its screen locker (PAM service kde),
+# so the lock screen of a passwordless account opens without a password; it
+# is forced off while Plasma is enabled.
 import ../../lib/mkRequirement.nix {
   id = "KONF.5.1";
   apply =
@@ -50,6 +53,12 @@ import ../../lib/mkRequirement.nix {
     in
     lib.mkMerge [
       e.settings
+      # Plain definition in plasma6.nix; mkIf keeps the service out otherwise.
+      {
+        security.pam.services = lib.mkIf config.services.desktopManager.plasma6.enable {
+          kde.allowNullPassword = lib.mkForce false;
+        };
+      }
       {
         assertions = e.assertions ++ [
           {
